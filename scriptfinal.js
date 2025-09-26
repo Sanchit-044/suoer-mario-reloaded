@@ -3,6 +3,7 @@ const c = canvas.getContext('2d');
 canvas.width = 1024;
 canvas.height = 576;
 
+
 function loadImage(url) {
     return new Promise((res, rej) => {
         const img = new Image();
@@ -92,6 +93,10 @@ class Player {
     }
     jump() {
         if (this.grounded) {
+            // play jump sound
+            if (jumpSound) {
+                try { jumpSound.currentTime = 0; jumpSound.play(); } catch (e) { /* ignore */ }
+            }
             this.vel.y = -18;
             this.grounded = false;
         }
@@ -246,6 +251,13 @@ window.addEventListener('keyup', e => {
 });
 
 let player, platforms = [], marioSprite, platformImg, coinImg, enemyImg, enemyDeadImg, cloudsImg;
+// AUDIO variables
+let groundTheme = null;
+let coinSound = null;
+let jumpSound = null;
+let winSound = null;
+let playedWinSound = false;
+
 let coins = [], enemies = [];
 let clouds = [];
 let scrollOffset = 0, score = 0, lives = 3, lastTime = 0;
@@ -325,6 +337,17 @@ function reset(fullReset = false) {
 
     generateClouds();
 
+    // play/pause ground theme based on level
+    playedWinSound = false;
+    if (groundTheme) {
+        if (currentLevel === 1) {
+            try { groundTheme.currentTime = 0; groundTheme.play(); } catch(e) { /* ignore autoplay blocks */ }
+        } else {
+            groundTheme.pause();
+            groundTheme.currentTime = 0;
+        }
+    }
+
     console.log(`Reset Level ${currentLevel}. Score:`, score, 'Lives:', lives);
 }
 
@@ -346,6 +369,28 @@ Promise.all([
     enemyImg = eImg;
     enemyDeadImg = eDeadImg;
     cloudsImg = clImg;
+
+    // create audio objects (files must be in same folder)
+    try {
+        groundTheme = new Audio('./groundtheme.mp3');
+        groundTheme.loop = true;
+        groundTheme.volume = 0.45;
+    } catch (e) { groundTheme = null; }
+
+    try {
+        coinSound = new Audio('./coinpick.wav');
+        coinSound.volume = 0.9;
+    } catch (e) { coinSound = null; }
+
+    try {
+        jumpSound = new Audio('./jump.wav');
+        jumpSound.volume = 0.9;
+    } catch (e) { jumpSound = null; }
+
+    try {
+        winSound = new Audio('./winwin.wav');
+        winSound.volume = 0.9;
+    } catch (e) { winSound = null; }
 
     try {
         marioSprite.define("idle", 276, 44, 16, 16);
@@ -518,6 +563,10 @@ function loop(now) {
     coins.forEach(cn => {
         if (cn.collect(player)) {
             score += 100;
+            // play coin sound
+            if (coinSound) {
+                try { coinSound.currentTime = 0; coinSound.play(); } catch(e) { /* ignore */ }
+            }
         }
         cn.draw(c);
     });
@@ -546,25 +595,40 @@ function loop(now) {
     c.restore();
 
     c.fillStyle = 'black';
-    c.font = '20px Arial';
+    c.font = "12px 'Press Start 2P'";
     c.fillText(`Score: ${score}`, 20, 30);
     c.fillText(`Lives: ${lives}`, 20, 60);
 
     if (player.pos.x > 5000 && currentLevel === 1) {
+        if (!levelComplete) {
+            // first frame of completion: pause background and play win once
+            if (groundTheme) { groundTheme.pause(); groundTheme.currentTime = 0; }
+            if (winSound && !playedWinSound) {
+                try { winSound.currentTime = 0; winSound.play(); } catch (e) { /* ignore */ }
+                playedWinSound = true;
+            }
+        }
         levelComplete = true;
         c.fillStyle = 'rgba(0,0,0,0.6)';
         c.fillRect(0, 0, canvas.width, canvas.height);
         c.fillStyle = 'white';
-        c.font = '40px Arial';
-        c.fillText('Level 1 Complete!', canvas.width / 2 - 150, canvas.height / 2 - 20);
-        c.font = '24px Arial';
-        c.fillText('Press N for Next Level or R to Replay', canvas.width / 2 - 180, canvas.height / 2 + 20);
+        c.font = "30px 'Press Start 2P'";
+        c.fillText('Level 1 Complete!', canvas.width / 2 - 190, canvas.height / 2 - 20);
+        c.font = "20px 'Press Start 2P'";
+        c.fillText('Press N for Next Level or R to Replay', canvas.width / 2 - 350, canvas.height / 2 + 20);
     } else if (player.pos.x > 5200 && currentLevel === 2) {
+        if (!levelComplete) {
+            if (groundTheme) { groundTheme.pause(); groundTheme.currentTime = 0; }
+            if (winSound && !playedWinSound) {
+                try { winSound.currentTime = 0; winSound.play(); } catch (e) { /* ignore */ }
+                playedWinSound = true;
+            }
+        }
         levelComplete = true;
         c.fillStyle = 'rgba(0,0,0,0.6)';
         c.fillRect(0, 0, canvas.width, canvas.height);
         c.fillStyle = 'white';
-        c.font = '40px Arial';
+        c.font = "30px 'Press Start 2P'";
         c.fillText('You Win!', canvas.width / 2 - 80, canvas.height / 2);
     }
 
