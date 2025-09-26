@@ -95,7 +95,7 @@ class Player {
         if (this.grounded) {
             // play jump sound
             if (jumpSound) {
-                try { jumpSound.currentTime = 0; jumpSound.play(); } catch (e) { /* ignore */ }
+                try { jumpSound.currentTime = 0; jumpSound.play(); } catch (e) {}
             }
             this.vel.y = -18;
             this.grounded = false;
@@ -253,9 +253,12 @@ window.addEventListener('keyup', e => {
 let player, platforms = [], marioSprite, platformImg, coinImg, enemyImg, enemyDeadImg, cloudsImg;
 // AUDIO variables
 let groundTheme = null;
+let level2Theme = null;
 let coinSound = null;
 let jumpSound = null;
 let winSound = null;
+let stompSound = null;
+let marioDeathSound = null;
 let playedWinSound = false;
 
 let coins = [], enemies = [];
@@ -337,16 +340,17 @@ function reset(fullReset = false) {
 
     generateClouds();
 
-    // play/pause ground theme based on level
     playedWinSound = false;
-    if (groundTheme) {
+    try {
+        if (groundTheme) { groundTheme.pause(); groundTheme.currentTime = 0; }
+        if (level2Theme) { level2Theme.pause(); level2Theme.currentTime = 0; }
+
         if (currentLevel === 1) {
-            try { groundTheme.currentTime = 0; groundTheme.play(); } catch(e) { /* ignore autoplay blocks */ }
-        } else {
-            groundTheme.pause();
-            groundTheme.currentTime = 0;
+            if (groundTheme) { try { groundTheme.currentTime = 0; groundTheme.play(); } catch(e) {} }
+        } else if (currentLevel === 2) {
+            if (level2Theme) { try { level2Theme.currentTime = 0; level2Theme.play(); } catch(e) {} }
         }
-    }
+    } catch(e) {}
 
     console.log(`Reset Level ${currentLevel}. Score:`, score, 'Lives:', lives);
 }
@@ -370,12 +374,17 @@ Promise.all([
     enemyDeadImg = eDeadImg;
     cloudsImg = clImg;
 
-    // create audio objects (files must be in same folder)
     try {
         groundTheme = new Audio('./groundtheme.mp3');
         groundTheme.loop = true;
         groundTheme.volume = 0.45;
     } catch (e) { groundTheme = null; }
+
+    try {
+        level2Theme = new Audio('./groundtheme.mp3');
+        level2Theme.loop = true;
+        level2Theme.volume = 0.45;
+    } catch (e) { level2Theme = null; }
 
     try {
         coinSound = new Audio('./coinpick.wav');
@@ -391,6 +400,16 @@ Promise.all([
         winSound = new Audio('./winwin.wav');
         winSound.volume = 0.9;
     } catch (e) { winSound = null; }
+
+    try {
+        stompSound = new Audio('./stomp.wav');
+        stompSound.volume = 0.9;
+    } catch (e) { stompSound = null; }
+
+    try {
+        marioDeathSound = new Audio('./mariodeath.mp3');
+        marioDeathSound.volume = 0.9;
+    } catch (e) { marioDeathSound = null; }
 
     try {
         marioSprite.define("idle", 276, 44, 16, 16);
@@ -563,9 +582,8 @@ function loop(now) {
     coins.forEach(cn => {
         if (cn.collect(player)) {
             score += 100;
-            // play coin sound
             if (coinSound) {
-                try { coinSound.currentTime = 0; coinSound.play(); } catch(e) { /* ignore */ }
+                try { coinSound.currentTime = 0; coinSound.play(); } catch(e) {}
             }
         }
         cn.draw(c);
@@ -577,13 +595,21 @@ function loop(now) {
             const col = en.checkCollision(player);
             if (col === 'stomp') {
                 en.kill(now);
+                if (stompSound) {
+                    try { stompSound.currentTime = 0; stompSound.play(); } catch (e) {}
+                }
                 player.vel.y = -10;
                 score += 200;
             } else if (col === 'hit') {
             if (!player.isInvincible(now)) {
                 lives -= 1;
                 console.log('Player hit! Lives left:', lives);
-                if (lives <= 0) reset(true);
+                if (lives <= 0) {
+                    if (marioDeathSound) {
+                        try { marioDeathSound.currentTime = 0; marioDeathSound.play(); } catch(e) {}
+                    }
+                    reset(true);
+                }
                 else player.makeInvincible(1500);
             }
         }
@@ -601,10 +627,9 @@ function loop(now) {
 
     if (player.pos.x > 5000 && currentLevel === 1) {
         if (!levelComplete) {
-            // first frame of completion: pause background and play win once
             if (groundTheme) { groundTheme.pause(); groundTheme.currentTime = 0; }
             if (winSound && !playedWinSound) {
-                try { winSound.currentTime = 0; winSound.play(); } catch (e) { /* ignore */ }
+                try { winSound.currentTime = 0; winSound.play(); } catch (e) {}
                 playedWinSound = true;
             }
         }
@@ -620,7 +645,7 @@ function loop(now) {
         if (!levelComplete) {
             if (groundTheme) { groundTheme.pause(); groundTheme.currentTime = 0; }
             if (winSound && !playedWinSound) {
-                try { winSound.currentTime = 0; winSound.play(); } catch (e) { /* ignore */ }
+                try { winSound.currentTime = 0; winSound.play(); } catch (e) {}
                 playedWinSound = true;
             }
         }
@@ -634,7 +659,12 @@ function loop(now) {
 
     if (player.pos.y + player.height >= canvas.height) {
         lives = 0;
-        if (lives <= 0) reset(true);
+        if (lives <= 0) {
+            if (marioDeathSound) {
+                try { marioDeathSound.currentTime = 0; marioDeathSound.play(); } catch(e) {}
+            }
+            reset(true);
+        }
         else restart();
     }
 

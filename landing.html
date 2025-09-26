@@ -1,80 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Super Mario Reloaded</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="mariologo.png">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Press Start 2P', cursive;
-      position: relative;
-      overflow: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Reloaded</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
-    .bg img {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.75;
-      z-index: -1;
-    }
-
-    h1 {
-      color: #fff;
-      font-size: 3rem;
-      text-shadow: 3px 3px 6px #000;
-      margin-bottom: 50px;
-      z-index: 1;
-    }
-
-    .play-btn {
-      background: red;
-      color: white;
-      padding: 20px 40px;
-      font-size: 1.5rem;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 3px 3px 8px #000;
-      transition: transform 0.2s, background 0.3s;
-      z-index: 1;
-    }
-
-    .play-btn:hover {
-      background: #ff6600;
-      transform: scale(1.1);
-    }
-
-    #screen {
-      display: none;
-    }
-  </style>
+<link rel="icon" type="image/png" href="mariologo.png">
 </head>
+
 <body>
-  <div class="bg">
-    <img src="mario-frontview.png" alt="Mario background" />
-  </div>
-
-  <h1>Mario Game Reloaded</h1>
-  <!-- <button class="play-btn">PLAY</button> -->
-  <button class="play-btn" onclick="location.href='index.html'">PLAY</button>
-
-
-  <canvas id="screen"></canvas>
-
-  <!-- <script src="landing.js"></script> -->
-  <script src="scriptfinal.js"></script>
+    <canvas id="screen"></canvas>
+    <div id="hint">W = Jump • A / D = Move<br> 200 pts - enemy <br> 100 pts - coins</div>
+    <script src="scriptfinal.js"></script>
 </body>
+
 </html>
